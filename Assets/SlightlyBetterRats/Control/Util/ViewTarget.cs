@@ -6,6 +6,8 @@ public class ViewTarget : MonoBehaviour {
     new public Camera camera { get; private set; }
     public AudioListener listener { get; private set; }
 
+    public Transform[] rotateCameras;
+
     private void Awake() {
         camera = GetComponent<Camera>();
         listener = GetComponent<AudioListener>();
@@ -30,6 +32,12 @@ public class ViewTarget : MonoBehaviour {
 
         if (listener) {
             listener.enabled = false;
+        }
+    }
+
+    private void LateUpdate() {
+        foreach (Transform cam in rotateCameras) {
+            cam.transform.rotation = transform.rotation;
         }
     }
 }
