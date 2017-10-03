@@ -37,7 +37,9 @@ public class ViewTarget : MonoBehaviour {
 
     private void LateUpdate() {
         foreach (Transform cam in rotateCameras) {
-            cam.transform.rotation = transform.rotation;
+            if (cam) {
+                cam.transform.rotation = transform.rotation;
+            }
         }
     }
 }

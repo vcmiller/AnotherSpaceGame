@@ -55,7 +55,7 @@ public class PlayerFighterController : PlayerController<FighterProxy> {
 
         controlled.rotation += (transform.right * -c.y + transform.up * c.x) * mouseToRotationScale;
 
-        controlled.target = viewTarget.transform.position + (crosshair.worldPosition - viewTarget.transform.position).normalized * 1000;
+        controlled.target = viewTarget.transform.position + (GetComponentInChildren<TargetTrackerMotor>().transform.position - viewTarget.transform.position).normalized * 1000;
     }
 
     protected override void OnEnable() {

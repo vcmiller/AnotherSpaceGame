@@ -8,4 +8,8 @@ public class Fighter : MonoBehaviour {
     private void Awake() {
         body = GetComponent<Rigidbody>();
     }
+
+    private void ZeroHealth() {
+        Destroy(gameObject);
+    }
 }

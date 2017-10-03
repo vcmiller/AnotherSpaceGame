@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class LookAhead : BasicMotor<FighterProxy> {
+    private void Start() {
+        
+    }
 
     public override void TakeInput() {
         Vector3 thrust = control.rotation;
