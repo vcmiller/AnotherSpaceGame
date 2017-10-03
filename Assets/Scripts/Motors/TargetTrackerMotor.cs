@@ -28,11 +28,11 @@ public class TargetTrackerMotor : BasicMotor<FighterProxy> {
             float d;
             Plane canvasPlane = new Plane(canvas.transform.forward, canvas.transform.position);
 
-            Vector3 predictedPos;
-            bool canPredict = SpaceUtil.PredictPosition(target, body, proj.launchSpeed, out predictedPos);
+            Vector3 aimDir;
+            bool canPredict = SpaceUtil.PredictPosition(target, body, proj.launchSpeed, out aimDir);
 
             if (canPredict) {
-                Ray ray = new Ray(cam.transform.position, predictedPos - cam.transform.position);
+                Ray ray = new Ray(cam.transform.position, aimDir);
                 bool b = canvasPlane.Raycast(ray, out d);
 
                 if (b) {

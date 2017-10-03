@@ -10,6 +10,7 @@ public class Projectile : MonoBehaviour {
     public float linger = 0.5f;
 
     public Vector3 velocity { get; set; }
+    public GameObject creator { get; set; }
     public bool fired { get; private set; }
 
     public virtual void Fire() {
@@ -22,7 +23,7 @@ public class Projectile : MonoBehaviour {
     }
 
 	protected virtual void OnHitObject(Collider col, Vector3 position, Vector3 normal) {
-        if (fired || hitsIfNotFired) {
+        if (col.transform.root.gameObject != creator && (fired || hitsIfNotFired)) {
             if (hitsTriggers || !col.isTrigger) {
                 Health d = col.GetComponent<Health>();
 

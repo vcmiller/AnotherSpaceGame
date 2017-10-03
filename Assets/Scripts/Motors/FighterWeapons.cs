@@ -21,16 +21,21 @@ public class FighterWeapons : BasicMotor<FighterProxy> {
 
     public override void TakeInput() {
         if (control.firing && fireTimer.canUse && clip.canFire) {
-            fireTimer.Use();
-            clip.Fire();
 
-            GameObject bullet = Instantiate(bulletPrefab, transform.position, transform.rotation);
+            if (Vector3.Dot(control.transform.forward, (control.target - control.transform.position).normalized) > 0.8) {
+                fireTimer.Use();
+                clip.Fire();
 
-            var p = bullet.GetComponent<Projectile>();
+                GameObject bullet = Instantiate(bulletPrefab, transform.position, transform.rotation);
 
-            p.transform.forward = control.target - bullet.transform.position;
-            p.Fire();
-            p.velocity += GetComponentInParent<Rigidbody>().velocity;
+                var p = bullet.GetComponent<Projectile>();
+
+                p.transform.forward = control.target - bullet.transform.position;
+                p.creator = transform.root.gameObject;
+                p.Fire();
+                p.velocity += GetComponentInParent<Rigidbody>().velocity;
+            }
+
         }
     }
 }

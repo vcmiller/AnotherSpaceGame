@@ -4,15 +4,21 @@ using UnityEngine;
 
 public class AIFighterController : DecisionTree<FighterProxy> {
     public Fighter target;
+    public Projectile projectile;
+
+    public Fighter self { get; private set; }
 
     protected override void Start() {
         base.Start();
+
+        self = GetComponent<Fighter>();
+
         root = 
         BoolTest(Test_InEnemyRange,
-            BoolTest(Test_FacingTowards,
+            //BoolTest(Test_FacingTowards,
                 Action_FlyBehind,
-                Action_Drop
-            ),
+            //    Action_Drop
+            //),
             BoolTest(Test_TooFar,
                 Action_Pursue,
                 BoolTest(Test_TooClose,
@@ -72,6 +78,15 @@ public class AIFighterController : DecisionTree<FighterProxy> {
         return Vector3.Dot(transform.forward, dir.normalized);
     }
 
+    private void FireAtTarget() {
+        Vector3 aim;
+
+        if (SpaceUtil.PredictPosition(target.body, self.body, projectile.launchSpeed, out aim)) {
+            controlled.target = transform.position + aim * 1000;
+            controlled.firing = true;
+        }
+    }
+
     public void Action_FlyBehind() {
         //print("FlyBehind");
         Vector3 enemyAim = target.transform.forward;
@@ -102,7 +117,7 @@ public class AIFighterController : DecisionTree<FighterProxy> {
 
         Vector3 awayFromAim = Vector3.Cross(c, awayFromEnemy).normalized;
 
-        RotateTowards(awayFromEnemy - awayFromAim * 0.2f);
+        RotateTowards(awayFromEnemy - awayFromAim);
         controlled.thrust = -1.0f;
     }
 
@@ -127,8 +142,7 @@ public class AIFighterController : DecisionTree<FighterProxy> {
         //print("Strafe");
         RotateTowards(target.transform.position - transform.position);
 
-        controlled.target = target.transform.position;
-        controlled.firing = myAttack > 0.9f;
+        FireAtTarget();
         controlled.thrust = 0;
     }
 
@@ -136,8 +150,7 @@ public class AIFighterController : DecisionTree<FighterProxy> {
         //print("Pursue");
         RotateTowards(target.transform.position - transform.position);
 
-        controlled.target = target.transform.position;
-        controlled.firing = myAttack > 0.9f;
+        FireAtTarget();
         controlled.thrust = 1;
     }
 
@@ -145,8 +158,7 @@ public class AIFighterController : DecisionTree<FighterProxy> {
         //print("Reverse");
         RotateTowards(target.transform.position - transform.position);
 
-        controlled.target = target.transform.position;
-        controlled.firing = myAttack > 0.9f;
+        FireAtTarget();
         controlled.thrust = -1;
     }
 }
