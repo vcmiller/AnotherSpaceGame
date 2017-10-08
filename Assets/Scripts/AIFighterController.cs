@@ -5,24 +5,31 @@ using UnityEngine;
 public class AIFighterController : DecisionTree<FighterProxy> {
     public Fighter target;
     public Projectile projectile;
+    public float boxCastDistance = 10;
 
+    public BoxCollider box { get; private set; }
     public Fighter self { get; private set; }
+    private RaycastHit wallHit;
 
     protected override void Start() {
         base.Start();
 
         self = GetComponent<Fighter>();
+        box = GetComponent<BoxCollider>();
 
-        root = 
-        BoolTest(Test_InEnemyRange,
-            //BoolTest(Test_FacingTowards,
+        root =
+        BoolTest(Test_CollisionAhead,
+            Action_AvoidWall,
+            BoolTest(Test_InEnemyRange,
                 Action_FlyBehind,
-            //    Action_Drop
-            //),
-            BoolTest(Test_TooFar,
-                Action_Pursue,
-                BoolTest(Test_TooClose,
-                    Action_Reverse,
+                BoolTest(Test_InMyRange,
+                    BoolTest(Test_TooFar,
+                        Action_Pursue,
+                        BoolTest(Test_TooClose,
+                            Action_Reverse,
+                            Action_Strafe
+                        )
+                    ),
                     Action_Strafe
                 )
             )
@@ -49,6 +56,14 @@ public class AIFighterController : DecisionTree<FighterProxy> {
         return enemyAttack > 0.9f;
     }
 
+    private bool Test_CollisionAhead() {
+        if (Physics.BoxCast(transform.position, box.size * 0.5f, self.body.velocity, out wallHit, transform.rotation, boxCastDistance * self.body.velocity.magnitude)) {
+            return true; // I know
+        }
+
+        return false;
+    }
+
     private float myAttack {
         get {
             return (Vector3.Dot(transform.forward, (target.transform.position - transform.position).normalized) + 1) / 2;
@@ -62,7 +77,10 @@ public class AIFighterController : DecisionTree<FighterProxy> {
     }
 
     private float RotateTowards(Vector3 dir) {
-        Vector3 c = Vector3.Cross(transform.forward, dir);
+        dir = dir.normalized;
+        Debug.DrawLine(transform.position, transform.position + dir * 20);
+
+        Vector3 c = Vector3.Cross(transform.forward, dir) * 10;
         float d = Vector3.Dot(transform.forward, dir);
 
         float sqr = c.sqrMagnitude;
@@ -87,6 +105,11 @@ public class AIFighterController : DecisionTree<FighterProxy> {
         }
     }
 
+    public void Action_AvoidWall() {
+        Vector3 v = self.body.velocity.normalized + wallHit.normal;
+        controlled.thrust = RotateTowards(v);
+    }
+
     public void Action_FlyBehind() {
         //print("FlyBehind");
         Vector3 enemyAim = target.transform.forward;
@@ -99,9 +122,8 @@ public class AIFighterController : DecisionTree<FighterProxy> {
         }
 
         Vector3 awayFromAim = Vector3.Cross(c, awayFromEnemy).normalized;
-
-        RotateTowards(awayFromAim * 0.5f - awayFromEnemy);
-        controlled.thrust = 1.0f;
+        
+        controlled.thrust = RotateTowards(awayFromAim * 0.5f - awayFromEnemy);
     }
 
     public void Action_Drop() {
@@ -117,8 +139,7 @@ public class AIFighterController : DecisionTree<FighterProxy> {
 
         Vector3 awayFromAim = Vector3.Cross(c, awayFromEnemy).normalized;
 
-        RotateTowards(awayFromEnemy - awayFromAim);
-        controlled.thrust = -1.0f;
+        controlled.thrust = -RotateTowards(awayFromEnemy - awayFromAim);
     }
 
     public void Action_Evade() {
@@ -133,9 +154,8 @@ public class AIFighterController : DecisionTree<FighterProxy> {
         }
 
         Vector3 awayFromAim = Vector3.Cross(c, awayFromEnemy).normalized;
-
-        RotateTowards(awayFromAim);
-        controlled.thrust = 1.0f;
+        
+        controlled.thrust = RotateTowards(awayFromAim);
     }
 
     public void Action_Strafe() {
@@ -148,10 +168,9 @@ public class AIFighterController : DecisionTree<FighterProxy> {
 
     public void Action_Pursue() {
         //print("Pursue");
-        RotateTowards(target.transform.position - transform.position);
-
+        
         FireAtTarget();
-        controlled.thrust = 1;
+        controlled.thrust = RotateTowards(target.transform.position - transform.position); ;
     }
 
     public void Action_Reverse() {
