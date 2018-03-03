@@ -1,9 +1,10 @@
-﻿using System;
+﻿using SBR;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FighterMotor : BasicMotor<FighterProxy> {
+public class FighterMotor : BasicMotor<FighterChannels> {
     public Rigidbody body { get; private set; }
 
     public float thrust;
@@ -12,15 +13,15 @@ public class FighterMotor : BasicMotor<FighterProxy> {
     public float angularThrust;
     public float maxRotSpeed;
 
-    protected override void Awake() {
-        base.Awake();
+    protected override void Start() {
+        base.Start();
 
         body = GetComponent<Rigidbody>();
     }
 
     public override void TakeInput() {
-        body.velocity = Vector3.MoveTowards(body.velocity, control.thrust * transform.forward * maxSpeed, thrust * Time.deltaTime * Mathf.Abs(control.thrust));
+        body.velocity = Vector3.MoveTowards(body.velocity, channels.thrust * transform.forward * maxSpeed, thrust * Time.deltaTime * Mathf.Abs(channels.thrust));
 
-        body.angularVelocity = Vector3.MoveTowards(body.angularVelocity, control.rotation * maxRotSpeed, angularThrust * Time.deltaTime);
+        body.angularVelocity = Vector3.MoveTowards(body.angularVelocity, channels.rotation * maxRotSpeed, angularThrust * Time.deltaTime);
     }
 }

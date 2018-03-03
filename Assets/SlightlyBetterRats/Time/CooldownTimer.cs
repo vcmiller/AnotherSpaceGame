@@ -2,46 +2,60 @@
 using System;
 using UnityEngine;
 
-public class CooldownTimer {
-	public float cooldown { get; set; }
-	public float lastUse { get; set; }
+namespace SBR {
+    public class CooldownTimer {
+        public float cooldown { get; set; }
+        public float lastUse { get; set; }
+        public bool unscaled { get; private set; }
 
-    public float chargeRatio {
-        get {
-            if (Time.time - lastUse > cooldown) {
-                return 1.0f;
-            } else {
-                return (Time.time - lastUse) / cooldown;
+        private float curTime {
+            get {
+                return unscaled ? Time.unscaledTime : Time.time;
             }
         }
-    }
 
-    public bool canUse {
-        get {
-            return Time.time - lastUse > cooldown;
+        public float chargeRatio {
+            get {
+                if (curTime - lastUse > cooldown) {
+                    return 1.0f;
+                } else {
+                    return (curTime - lastUse) / cooldown;
+                }
+            }
         }
-    }
 
-    public CooldownTimer (float cooldown) {
-		this.cooldown = cooldown;
-		lastUse = Time.time;
-    }
-
-    public bool Use() {
-        if (Time.time - lastUse > cooldown) {
-            lastUse = Time.time;
-            return true;
-        } else {
-            return false;
+        public bool canUse {
+            get {
+                return curTime - lastUse > cooldown;
+            }
         }
-    }
 
-    public void Clear() {
-		lastUse = Time.time - cooldown;
-	}
+        public CooldownTimer(float cooldown) {
+            this.cooldown = cooldown;
+            this.lastUse = curTime;
+        }
 
-    public void Reset() {
-        lastUse = Time.time;
+        public CooldownTimer(float cooldown, float initial) {
+            this.cooldown = cooldown;
+            this.lastUse = curTime - cooldown + initial;
+        }
+
+        public bool Use() {
+            if (curTime - lastUse > cooldown) {
+                lastUse = curTime;
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        public void Clear() {
+            lastUse = curTime - cooldown;
+        }
+
+        public void Reset() {
+            lastUse = curTime;
+        }
     }
 }
 

@@ -2,43 +2,43 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ViewTarget : MonoBehaviour {
-    new public Camera camera { get; private set; }
-    public AudioListener listener { get; private set; }
+namespace SBR {
+    public class ViewTarget : MonoBehaviour {
+        new public Camera camera { get; private set; }
+        public AudioListener listener { get; private set; }
+        
+        public Transform[] rotateCameras;
 
-    public Transform[] rotateCameras;
-
-    private void Awake() {
-        camera = GetComponent<Camera>();
-        listener = GetComponent<AudioListener>();
-
-        enabled = false;
-    }
-
-    private void OnEnable() {
-        if (camera) {
-            camera.enabled = true;
+        private void Awake() {
+            camera = GetComponent<Camera>();
+            listener = GetComponent<AudioListener>();
         }
 
-        if (listener) {
-            listener.enabled = true;
-        }
-    }
+        private void OnEnable() {
+            if (camera) {
+                camera.enabled = true;
+            }
 
-    private void OnDisable() {
-        if (camera) {
-            camera.enabled = false;
+            if (listener) {
+                listener.enabled = true;
+            }
         }
 
-        if (listener) {
-            listener.enabled = false;
-        }
-    }
+        private void OnDisable() {
+            if (camera) {
+                camera.enabled = false;
+            }
 
-    private void LateUpdate() {
-        foreach (Transform cam in rotateCameras) {
-            if (cam) {
-                cam.transform.rotation = transform.rotation;
+            if (listener) {
+                listener.enabled = false;
+            }
+        }
+
+        private void LateUpdate() {
+            foreach (Transform cam in rotateCameras) {
+                if (cam) {
+                    cam.transform.rotation = transform.rotation;
+                }
             }
         }
     }

@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class OneshotParticles : MonoBehaviour {
+namespace SBR {
+    public class OneshotParticles : MonoBehaviour {
 
-	// Use this for initialization
-	void Start () {
-        Destroy(gameObject, GetComponent<ParticleSystem>().main.duration);
-	}
+        // Use this for initialization
+        void Start() {
+            Destroy(gameObject, GetComponent<ParticleSystem>().main.duration);
+        }
+    }
 }

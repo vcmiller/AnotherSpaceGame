@@ -1,8 +1,9 @@
-﻿using System.Collections;
+﻿using SBR;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class DecisionTree<T> : Controller where T : MonoBehaviour {
+public abstract class DecisionTree<T> : Controller where T : Channels {
     public T controlled { get; private set; }
 
     protected delegate bool Test();
@@ -10,10 +11,8 @@ public abstract class DecisionTree<T> : Controller where T : MonoBehaviour {
 
     protected Action root { private get; set; }
 
-    protected override void Start() {
-        base.Start();
-
-        controlled = GetComponent<T>();
+    protected virtual void Start() {
+        controlled = channels as T;
     }
 
     protected Action And(params Action[] actions) {
@@ -34,7 +33,7 @@ public abstract class DecisionTree<T> : Controller where T : MonoBehaviour {
         };
     }
 
-    public override void GetInput() {
+    public override void Update() {
         if (root != null) {
             root();
         }

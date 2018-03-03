@@ -1,35 +1,36 @@
-﻿using System.Collections;
+﻿using SBR;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class TargetTrackerMotor : BasicMotor<FighterProxy> {
+public class TargetTrackerMotor : BasicMotor<FighterChannels> {
 
     public RectTransform rect { get; private set; }
     public Image image { get; private set; }
     public RectTransform canvas { get; private set; }
     public Rigidbody body { get; private set; }
+    public Camera cam { get; private set; }
 
-    public Camera cam;
     public Projectile proj;
-    public Rigidbody target;
 
-    protected override void Awake() {
-        base.Awake();
+    protected override void Start() {
+        base.Start();
 
         rect = GetComponent<RectTransform>();
         image = GetComponent<Image>();
         canvas = GetComponentInParent<Canvas>().GetComponent<RectTransform>();
         body = GetComponentInParent<Rigidbody>();
+        cam = transform.root.GetComponentInChildren<Camera>();
     }
 
     public override void TakeInput() {
-        if (target) {
+        if (channels.target) {
             float d;
             Plane canvasPlane = new Plane(canvas.transform.forward, canvas.transform.position);
 
             Vector3 aimDir;
-            bool canPredict = SpaceUtil.PredictPosition(target, body, proj.launchSpeed, out aimDir);
+            bool canPredict = SpaceUtil.PredictPosition(channels.target.body, body, proj.launchSpeed, out aimDir);
 
             if (canPredict) {
                 Ray ray = new Ray(cam.transform.position, aimDir);

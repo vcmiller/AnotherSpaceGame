@@ -1,8 +1,9 @@
-﻿using System.Collections;
+﻿using SBR;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AIFighterController : DecisionTree<FighterProxy> {
+public class AIFighterController : DecisionTree<FighterChannels> {
     public Fighter target;
     public Projectile projectile;
     public float boxCastDistance = 10;
@@ -100,7 +101,7 @@ public class AIFighterController : DecisionTree<FighterProxy> {
         Vector3 aim;
 
         if (SpaceUtil.PredictPosition(target.body, self.body, projectile.launchSpeed, out aim)) {
-            controlled.target = transform.position + aim * 1000;
+            controlled.aim = transform.position + aim * 1000;
             controlled.firing = true;
         }
     }

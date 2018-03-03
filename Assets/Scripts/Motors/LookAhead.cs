@@ -1,15 +1,13 @@
-﻿using System;
+﻿using SBR;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LookAhead : BasicMotor<FighterProxy> {
-    private void Start() {
-        
-    }
+public class LookAhead : BasicMotor<FighterChannels> {
 
     public override void TakeInput() {
-        Vector3 thrust = control.rotation;
+        Vector3 thrust = channels.rotation;
         thrust = transform.InverseTransformVector(thrust);
 
         Vector3 angles = transform.localEulerAngles;

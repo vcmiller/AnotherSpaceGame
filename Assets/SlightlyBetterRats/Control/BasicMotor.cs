@@ -2,10 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class BasicMotor<T> : Motor where T : ControlProxy {
-    public T control { get; private set; }
+namespace SBR {
+    public abstract class BasicMotor<T> : Motor where T : Channels {
+        public T channels { get; private set; }
 
-    protected override void Awake() {
-        control = GetComponentInParent<T>();
+        protected override void Start() {
+            base.Start();
+            Brain b = GetComponentInParent<Brain>();
+            if (b) {
+                channels = b.channels as T;
+            }
+        }
     }
 }

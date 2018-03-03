@@ -2,10 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class Motor : MonoBehaviour {
-    protected virtual void Awake() {
+namespace SBR {
+    public abstract class Motor : MonoBehaviour {
+        public bool enableInput { get; set; }
 
+        protected virtual void Start() {
+            enableInput = true;
+        }
+
+        public abstract void TakeInput();
+
+        public virtual void UpdateAfterInput() { }
     }
-
-    public abstract void TakeInput();
 }

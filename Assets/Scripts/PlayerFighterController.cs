@@ -1,10 +1,18 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using SBR;
 
-public class PlayerFighterController : PlayerController<FighterProxy> {
+public class PlayerFighterController : PlayerController {
     public float mouseToRotationScale = 0.01f;
-    public CrosshairMotor crosshair;
+    public Vector2 crosshairLimits = new Vector2(300, 150);
+
+    public CrosshairMotor crosshair { get; private set; }
+    public TargetTrackerMotor tracker { get; private set; }
+    public FighterChannels controlled { get; private set; }
+
+    private bool lockPressed;
+    private bool mouseAim;
 
     #region axes
     public void Axis_Horizontal(float value) {
@@ -16,27 +24,37 @@ public class PlayerFighterController : PlayerController<FighterProxy> {
     }
 
     public void Axis_LookHorizontal(float value) {
-        controlled.rotation += transform.up * value;
-
-        if (Mathf.Abs(value) != 0) {
+        if (value != 0) {
+            controlled.rotation += transform.up * value;
             controlled.crosshair = Vector2.zero;
+            mouseAim = false;
         }
     }
 
     public void Axis_LookVertical(float value) {
-        controlled.rotation -= transform.right * value;
-
-        if (Mathf.Abs(value) != 0) {
+        if (value != 0) {
+            controlled.rotation -= transform.right * value;
             controlled.crosshair = Vector2.zero;
+            mouseAim = false;
         }
     }
 
     public void Axis_MouseX(float value) {
-        controlled.crosshair += Vector2.right * value;
+        if (value != 0) {
+            Vector3 v = controlled.crosshair + Vector3.right * value;
+            v.x = Mathf.Clamp(v.x, -crosshairLimits.x, crosshairLimits.x);
+            controlled.crosshair = v;
+            mouseAim = true;
+        }
     }
 
     public void Axis_MouseY(float value) {
-        controlled.crosshair += Vector2.up * value;
+        if (value != 0) {
+            Vector3 v = controlled.crosshair + Vector3.up * value;
+            v.y = Mathf.Clamp(v.y, -crosshairLimits.y, crosshairLimits.y);
+            controlled.crosshair = v;
+            mouseAim = true;
+        }
     }
     #endregion
     #region buttons
@@ -46,27 +64,63 @@ public class PlayerFighterController : PlayerController<FighterProxy> {
             controlled.firing = true;
         }
     }
+
+    public void Axis_Lock(float value) {
+        if (value > 0.5f && !lockPressed) {
+            float minDist = float.PositiveInfinity;
+            Fighter targ = null;
+
+            foreach (Fighter f in FindObjectsOfType<Fighter>()) {
+                if (f.transform != transform) {
+                    Vector3 vpos = viewTarget.camera.WorldToScreenPoint(f.transform.position);
+                    if (vpos.z > 0) {
+                        float dist = vpos.sqrMagnitude;
+                        if (dist < minDist) {
+                            minDist = dist;
+                            targ = f;
+                        }
+                    }
+                }
+            }
+
+            if (targ != null) {
+                controlled.target = targ;
+            }
+
+            lockPressed = true;
+        } else if (value < 0.5f) {
+            lockPressed = false;
+        }
+    }
     #endregion
 
-    public override void GetInput() {
-        base.GetInput();
+    public override void Update() {
+        base.Update();
 
         Vector2 c = controlled.crosshair;
 
         controlled.rotation += (transform.right * -c.y + transform.up * c.x) * mouseToRotationScale;
 
-        controlled.target = viewTarget.transform.position + (crosshair.worldPosition - viewTarget.transform.position).normalized * 1000;
+        if (mouseAim || !tracker.image.enabled) {
+            controlled.aim = viewTarget.transform.position + (crosshair.transform.position - viewTarget.transform.position).normalized * 1000;
+        } else {
+            controlled.aim = viewTarget.transform.position + (tracker.transform.position - viewTarget.transform.position).normalized * 1000;
+        }
     }
 
-    protected override void OnEnable() {
-        base.OnEnable();
+    protected override void OnControllerEnabled() {
+        base.OnControllerEnabled();
+
+        controlled = channels as FighterChannels;
+        crosshair = GetComponentInChildren<CrosshairMotor>();
+        tracker = GetComponentInChildren<TargetTrackerMotor>();
 
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
     }
 
-    protected override void OnDisable() {
-        base.OnDisable();
+    protected override void OnControllerDisabled() {
+        base.OnControllerDisabled();
 
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;

@@ -3,18 +3,19 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CameraArm : BasicMotor<BasicControlProxy> {
-    public bool useControlRotation = true;
+namespace SBR {
+    public class CameraArm : BasicMotor<CharacterChannels> {
+        public bool useControlRotation = true;
+        private Quaternion rot;
 
-    private Quaternion rot;
-
-    private void LateUpdate() {
-        if (useControlRotation && control) {
-            transform.rotation = rot;
+        private void LateUpdate() {
+            if (useControlRotation && channels != null) {
+                transform.rotation = rot;
+            }
         }
-    }
 
-    public override void TakeInput() {
-        rot = control.rotation;
+        public override void TakeInput() {
+            rot = channels.rotation;
+        }
     }
 }

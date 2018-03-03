@@ -1,31 +1,37 @@
-﻿using System;
+﻿using SBR;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TargetProjector : BasicMotor<FighterProxy> {
-    
+public class TargetProjector : BasicMotor<FighterChannels> {
     public Material material;
-
-    public MeshFilter target;
 
     private int layer;
     public float size = 0.1f;
 
-    protected override void Awake() {
-        base.Awake();
+    public MeshRenderer mesh { get; private set; }
+
+    protected override void Start() {
+        base.Start();
 
         layer = LayerMask.NameToLayer("Default");
+        mesh = GetComponent<MeshRenderer>();
     }
 
     public override void TakeInput() {
-        transform.rotation = target.transform.rotation;
 
-        Bounds b = target.mesh.bounds;
-        float f = Mathf.Max(b.size.x, b.size.y, b.size.z);
-        float scale = size / f;
-        transform.localScale = new Vector3(scale, scale, scale);
+        if (channels.target) {
+            transform.rotation = channels.target.transform.rotation;
 
-        Graphics.DrawMesh(target.mesh, transform.localToWorldMatrix, material, layer);
+            Mesh targetMesh = channels.target.GetComponent<MeshFilter>().mesh;
+
+            Bounds b = targetMesh.bounds;
+            float f = Mathf.Max(b.size.x, b.size.y, b.size.z);
+            float scale = size / f;
+            transform.localScale = new Vector3(scale, scale, scale);
+
+            Graphics.DrawMesh(targetMesh, transform.localToWorldMatrix, material, layer);
+        }
     }
 }

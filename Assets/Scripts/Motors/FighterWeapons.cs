@@ -2,8 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using SBR;
 
-public class FighterWeapons : BasicMotor<FighterProxy> {
+public class FighterWeapons : BasicMotor<FighterChannels> {
     public GameObject bulletPrefab;
     public float fireCooldown;
     public int clipSize;
@@ -12,17 +13,17 @@ public class FighterWeapons : BasicMotor<FighterProxy> {
     public CooldownTimer fireTimer { get; private set; }
     public Magazine clip { get; private set; }
 
-    protected override void Awake() {
-        base.Awake();
+    protected override void Start() {
+        base.Start();
 
         fireTimer = new CooldownTimer(fireCooldown);
         clip = new Magazine(clipSize, reloadTime);
     }
 
     public override void TakeInput() {
-        if (control.firing && fireTimer.canUse && clip.canFire) {
+        if (channels.firing && fireTimer.canUse && clip.canFire) {
 
-            if (Vector3.Dot(control.transform.forward, (control.target - control.transform.position).normalized) > 0.8) {
+            if (Vector3.Dot(transform.forward, (channels.aim - transform.position).normalized) > 0.8) {
                 fireTimer.Use();
                 clip.Fire();
 
@@ -30,7 +31,7 @@ public class FighterWeapons : BasicMotor<FighterProxy> {
 
                 var p = bullet.GetComponent<Projectile>();
 
-                p.transform.forward = control.target - bullet.transform.position;
+                p.transform.forward = channels.aim - bullet.transform.position;
                 p.creator = transform.root.gameObject;
                 p.Fire();
                 p.velocity += GetComponentInParent<Rigidbody>().velocity;
