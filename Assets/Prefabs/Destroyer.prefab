@@ -73,6 +73,8 @@ GameObject:
   m_Component:
   - component: {fileID: 4711899588385546}
   - component: {fileID: 54355730850503088}
+  - component: {fileID: 114304047915095654}
+  - component: {fileID: 114183707869648610}
   m_Layer: 10
   m_Name: Destroyer
   m_TagString: Untagged
@@ -371,6 +373,34 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 35.4, y: 22.909565, z: 25.028275}
   m_Center: {x: 0, y: -1.9903908, z: -37.951004}
+--- !u!114 &114183707869648610
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1764375836375078}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c07a40e6888b954cbdc66467c1c476f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  thrust: 25
+  maxSpeed: 50
+  angularThrust: 0.25
+  maxRotSpeed: 0.5
+--- !u!114 &114304047915095654
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1764375836375078}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 174d5f726f052f34d92d837311541150, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  channelsType: CruiserChannels
+  defaultController: 0
 --- !u!136 &136983022552758896
 CapsuleCollider:
   m_ObjectHideFlags: 1

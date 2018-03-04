@@ -39,6 +39,8 @@ GameObject:
   m_Component:
   - component: {fileID: 4468255780475432}
   - component: {fileID: 54577205278484180}
+  - component: {fileID: 114536580673058926}
+  - component: {fileID: 114889235027857606}
   m_Layer: 10
   m_Name: PatrolCraft
   m_TagString: Untagged
@@ -689,6 +691,34 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 20.82, y: 14.656181, z: 2.4951553}
   m_Center: {x: 0, y: -5.3540726, z: -1.8249397}
+--- !u!114 &114536580673058926
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1077474938144352}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 174d5f726f052f34d92d837311541150, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  channelsType: CruiserChannels
+  defaultController: 0
+--- !u!114 &114889235027857606
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1077474938144352}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c07a40e6888b954cbdc66467c1c476f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  thrust: 35
+  maxSpeed: 70
+  angularThrust: 0.25
+  maxRotSpeed: 0.5
 --- !u!136 &136571018858245830
 CapsuleCollider:
   m_ObjectHideFlags: 1

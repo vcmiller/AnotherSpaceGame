@@ -19,7 +19,7 @@ public class FighterChannels : SBR.Channels {
         }
 
         set {
-            SetFloat("thrust", value);
+            SetFloat("thrust", value, -1, 1);
         }
     }
 

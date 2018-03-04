@@ -166,7 +166,7 @@ public abstract class {0} : {5} {{
             for (int i = 0; i < def.states.Count; i++) {
                 str += GetStateInitializer(def.states[i], i);
             }
-            if (def.defaultState.Length > 0 && def.GetState(def.defaultState) != null) {
+            if (def.defaultState != null && def.defaultState.Length > 0 && def.GetState(def.defaultState) != null) {
                 str += "        currentState = state" + def.defaultState + ";\n";
             } else {
                 str += "        currentState = states[0];\n";

@@ -16,9 +16,9 @@ MonoBehaviour:
   - name: thrust
     type: 0
     clears: 0
-    floatHasRange: 0
-    floatMin: 0
-    floatMax: 0
+    floatHasRange: 1
+    floatMin: -1
+    floatMax: 1
     defaultFloat: 0
     intHasRange: 0
     intMin: 0

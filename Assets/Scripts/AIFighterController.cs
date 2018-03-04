@@ -171,7 +171,7 @@ public class AIFighterController : DecisionTree<FighterChannels> {
         //print("Pursue");
         
         FireAtTarget();
-        controlled.thrust = RotateTowards(target.transform.position - transform.position); ;
+        controlled.thrust = RotateTowards(target.transform.position - transform.position);
     }
 
     public void Action_Reverse() {
