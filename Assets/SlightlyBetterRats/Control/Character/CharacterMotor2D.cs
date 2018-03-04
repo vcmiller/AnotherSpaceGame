@@ -25,14 +25,14 @@ namespace SBR {
         public float queryExtraDistance = 0.1f;
 
         [Tooltip("Layers that block the character.")]
-        public LayerMask blockingLayers;
+        public LayerMask blockingLayers = 1;
 
         [Header("Movement: Walking")]
         [Tooltip("The max walk speed of the character.")]
         public float walkSpeed = 5;
 
         [Tooltip("The walking (ground) acceleration of the character.")]
-        public float walkAcceleration = 5;
+        public float walkAcceleration = 25;
 
         [Tooltip("The maximum slope, in degrees, that the character can climb.")]
         public float maxSlope = 45;

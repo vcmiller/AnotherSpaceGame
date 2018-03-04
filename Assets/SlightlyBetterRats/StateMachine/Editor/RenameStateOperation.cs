@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-namespace SBR {
+namespace SBR.Editor {
     public class RenameStateOperation : Operation {
         private string name;
 
-        public RenameStateOperation(StateMachineDefinition def, StateMachineDefinition.State state) : base(def, state) {
+        public RenameStateOperation(StateMachineDefinition def, StateMachineEditorWindow window, StateMachineDefinition.State state) : base(def, window, state) {
             name = state.name;
             showBaseGUI = false;
         }
@@ -34,11 +34,13 @@ namespace SBR {
         }
 
         public override void Confirm() {
-            definition.RenameState(state, name);
+            definition.RenameState(state, name != null ? name.Replace(" ", "") : name);
         }
 
         public override void OnGUI() {
-            name = EditorGUI.TextField(state.rect, name);
+            Rect rect = state.rect;
+            rect.position -= window.scrollPos;
+            name = EditorGUI.TextField(rect, name);
         }
     }
 }

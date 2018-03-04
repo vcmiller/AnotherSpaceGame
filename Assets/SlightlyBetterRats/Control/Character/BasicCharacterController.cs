@@ -6,15 +6,19 @@ namespace SBR {
     public class BasicCharacterController : PlayerController {
         public CharacterChannels character { get; private set; }
 
-        public override void Initialize(GameObject obj) {
-            base.Initialize(obj);
+        public float pitchMin = -80;
+        public float pitchMax = 80;
+
+        private Vector3 angles;
+
+        public override void Initialize() {
+            base.Initialize();
 
             character = channels as CharacterChannels;
         }
-
-
+        
         public void Axis_Horizontal(float value) {
-            Vector3 right = viewTarget.transform.right;
+            Vector3 right = viewTarget ? viewTarget.transform.right : transform.right;
             right.y = 0;
             right = right.normalized;
 
@@ -22,7 +26,7 @@ namespace SBR {
         }
 
         public void Axis_Vertical(float value) {
-            Vector3 fwd = viewTarget.transform.forward;
+            Vector3 fwd = viewTarget ? viewTarget.transform.forward : transform.forward;
             fwd.y = 0;
             fwd = fwd.normalized;
 
@@ -38,11 +42,21 @@ namespace SBR {
         }
 
         public void Axis_MouseX(float value) {
-            character.rotation = Quaternion.Euler(0, value, 0) * character.rotation;
+            angles.y += value;
+
+            character.rotation = Quaternion.Euler(angles);
         }
 
         public void Axis_MouseY(float value) {
-            character.rotation *= Quaternion.Euler(-value, 0, 0);
+            angles.x -= value;
+
+            if (angles.x < pitchMin) {
+                angles.x = pitchMin;
+            } else if (angles.x > pitchMax) {
+                angles.x = pitchMax;
+            }
+
+            character.rotation = Quaternion.Euler(angles);
         }
     }
 }

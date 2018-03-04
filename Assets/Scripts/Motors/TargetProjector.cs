@@ -3,9 +3,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class TargetProjector : BasicMotor<FighterChannels> {
     public Material material;
+    public Healthbar bar;
+    public Text info;
+    public Text header;
 
     private int layer;
     public float size = 0.1f;
@@ -32,6 +36,14 @@ public class TargetProjector : BasicMotor<FighterChannels> {
             transform.localScale = new Vector3(scale, scale, scale);
 
             Graphics.DrawMesh(targetMesh, transform.localToWorldMatrix, material, layer);
+
+            bar.target = channels.target.health ?? null;
+            info.text = channels.target.title + "\n" + channels.target.affil;
+            header.enabled = true;
+        } else {
+            bar.target = null;
+            info.text = "";
+            header.enabled = false;
         }
     }
 }

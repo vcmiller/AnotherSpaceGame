@@ -13,9 +13,21 @@ namespace SBR {
             }
         }
 
+        private float deltaTime {
+            get {
+                return unscaled ? Time.unscaledDeltaTime : Time.deltaTime;
+            }
+        }
+
         public bool expired {
             get {
-                return curTime - lastSet >= expiration;
+                return curTime >= lastSet + expiration;
+            }
+        }
+
+        public bool expiredThisFrame {
+            get {
+                return expired && curTime - deltaTime <= lastSet + expiration;
             }
         }
 

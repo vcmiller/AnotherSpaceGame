@@ -29,10 +29,10 @@ public class FighterWeapons : BasicMotor<FighterChannels> {
 
                 GameObject bullet = Instantiate(bulletPrefab, transform.position, transform.rotation);
 
-                var p = bullet.GetComponent<Projectile>();
+                var p = bullet.GetComponent<DontHitMe>();
 
                 p.transform.forward = channels.aim - bullet.transform.position;
-                p.creator = transform.root.gameObject;
+                p.creator = transform.root;
                 p.Fire();
                 p.velocity += GetComponentInParent<Rigidbody>().velocity;
             }

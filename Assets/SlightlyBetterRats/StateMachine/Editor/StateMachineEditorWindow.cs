@@ -5,7 +5,7 @@ using UnityEditor;
 using System;
 using System.Linq;
 
-namespace SBR {
+namespace SBR.Editor {
     public class StateMachineEditorWindow : EditorWindow {
         private Operation op;
         private bool dirty = false;
@@ -13,7 +13,6 @@ namespace SBR {
         private bool resize = false;
         private readonly Color bgColor = new Color32(93, 93, 93, 255);
         private readonly Color lineColor = new Color32(70, 70, 70, 255);
-        private readonly Color darkLineColor = new Color32(40, 40, 40, 255);
         private readonly Color panelColor = new Color32(194, 194, 194, 255);
 
         [NonSerialized]
@@ -32,7 +31,7 @@ namespace SBR {
         [NonSerialized]
         private Pair<StateMachineDefinition.State, StateMachineDefinition.Transition> editingTransition;
 
-        Vector2 scrollPos = Vector2.zero;
+        public Vector2 scrollPos { get; private set; }
 
         public StateMachineEditorWindow() {
             wantsMouseMove = true;
@@ -119,9 +118,9 @@ namespace SBR {
 
 
                                     if (cur.clickCount == 1) {
-                                        op = new MoveStateOperation(def, selected);
+                                        op = new MoveStateOperation(def, this, selected);
                                     } else if (cur.clickCount == 2) {
-                                        op = new RenameStateOperation(def, selected);
+                                        op = new RenameStateOperation(def, this, selected);
                                     }
                                 } else if (selectedTr.t1 != null) {
                                     editingTransition = selectedTr;
@@ -141,8 +140,9 @@ namespace SBR {
 
                                     menu.AddItem(new GUIContent("Create State"), false, () => {
                                         var s = def.AddState();
-                                        s.position = cur.mousePosition;
-                                        op = new RenameStateOperation(def, s);
+                                        s.position = cur.mousePosition + scrollPos;
+                                        MoveStateOperation.Snap(ref s.position);
+                                        op = new RenameStateOperation(def, this, s);
                                         EditorUtility.SetDirty(def);
                                         dirty = true;
                                     });
@@ -159,7 +159,7 @@ namespace SBR {
                                     });
 
                                     menu.AddItem(new GUIContent("Add Transition"), false, () => {
-                                        op = new MakeTransitionOperation(def, selected);
+                                        op = new MakeTransitionOperation(def, this, selected);
                                     });
 
                                     if (selected.name != def.defaultState) {
@@ -216,64 +216,66 @@ namespace SBR {
                     Handles.DrawLine(new Vector3(0, y), new Vector3(viewportRect.width, y));
                 }
 
-                foreach (var from in def.states) {
-                    if (from.transitions != null) {
-                        foreach (var tr in from.transitions) {
-                            if (tr != lastSelectedTr && tr != editingTransition.t2) {
-                                Handles.color = Color.black;
+                if (def.states != null) {
+                    foreach (var from in def.states) {
+                        if (from.transitions != null) {
+                            foreach (var tr in from.transitions) {
+                                if (tr != lastSelectedTr && tr != editingTransition.t2) {
+                                    Handles.color = Color.black;
+                                } else {
+                                    Handles.color = Color.blue;
+                                }
+
+                                if (def.GetState(tr.to) != null) {
+                                    var line = def.GetTransitionPoints(from, tr);
+                                    Vector2 src = line.t1 - scrollPos;
+                                    Vector2 dest = line.t2 - scrollPos;
+
+                                    Vector2 v = (dest - src).normalized;
+                                    Vector2 ortho = new Vector2(v.y, -v.x);
+
+                                    Vector2 arrow = ortho - v;
+                                    Vector2 mid = (src + dest) / 2;
+
+                                    Handles.DrawAAPolyLine(3, src, dest);
+                                    Handles.DrawAAPolyLine(3, mid + v * 5, mid + arrow * 10);
+                                }
+                            }
+                        }
+                    }
+
+                    foreach (var state in def.states) {
+                        if (op == null || op.state != state || op.showBaseGUI) {
+                            string s = state.name;
+                            if (def.defaultState == s) {
+                                s += "\n<default state>";
+                            }
+
+                            Rect rect = state.rect;
+                            rect.position -= scrollPos;
+
+                            if (state != lastSelectedState && state != editingState) {
+                                GUI.Button(rect, s);
                             } else {
-                                Handles.color = Color.blue;
+                                GUI.Button(rect, "");
+
+                                var centeredStyle = new GUIStyle(GUI.skin.label);
+                                centeredStyle.alignment = TextAnchor.MiddleCenter;
+                                centeredStyle.normal.textColor = Color.blue;
+                                centeredStyle.fontStyle = FontStyle.Bold;
+
+                                GUI.Label(rect, s, centeredStyle);
                             }
+                        }
 
-                            if (def.GetState(tr.to) != null) {
-                                var line = def.GetTransitionPoints(from, tr);
-                                Vector2 src = line.t1 - scrollPos;
-                                Vector2 dest = line.t2 - scrollPos;
-
-                                Vector2 v = (dest - src).normalized;
-                                Vector2 ortho = new Vector2(v.y, -v.x);
-
-                                Vector2 arrow = ortho - v;
-                                Vector2 mid = (src + dest) / 2;
-
-                                Handles.DrawAAPolyLine(3, src, dest);
-                                Handles.DrawAAPolyLine(3, mid + v * 5, mid + arrow * 10);
-                            }
+                        if (op != null && op.state == state) {
+                            op.OnGUI();
                         }
                     }
                 }
-
+                
                 Handles.EndGUI();
-
-                foreach (var state in def.states) {
-                    if (op == null || op.state != state || op.showBaseGUI) {
-                        string s = state.name;
-                        if (def.defaultState == s) {
-                            s += "\n<default state>";
-                        }
-
-                        Rect rect = state.rect;
-                        rect.position -= scrollPos;
-
-                        if (state != lastSelectedState && state != editingState) {
-                            GUI.Button(rect, s);
-                        } else {
-                            GUI.Button(rect, "");
-
-                            var centeredStyle = new GUIStyle(GUI.skin.label);
-                            centeredStyle.alignment = TextAnchor.MiddleCenter;
-                            centeredStyle.normal.textColor = Color.blue;
-                            centeredStyle.fontStyle = FontStyle.Bold;
-
-                            GUI.Label(rect, s, centeredStyle);
-                        }
-                    }
-
-                    if (op != null && op.state == state) {
-                        op.OnGUI();
-                    }
-                }
-
+                
                 if (showSide) {
                     EditorGUI.DrawRect(new Rect(position.width - sidePanelWidth, 0, sidePanelWidth, position.height), panelColor);
 
@@ -394,7 +396,7 @@ namespace SBR {
 
             EditorGUIUtility.AddCursorRect(cursorChangeRect, MouseCursor.ResizeHorizontal);
 
-            if (Event.current.type == EventType.mouseDown && cursorChangeRect.Contains(Event.current.mousePosition)) {
+            if (Event.current.type == EventType.MouseDown && cursorChangeRect.Contains(Event.current.mousePosition)) {
                 resize = true;
             }
             if (resize) {

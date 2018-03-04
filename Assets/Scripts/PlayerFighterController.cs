@@ -33,6 +33,7 @@ public class PlayerFighterController : PlayerController {
 
     public void Axis_LookVertical(float value) {
         if (value != 0) {
+            print(value);
             controlled.rotation -= transform.right * value;
             controlled.crosshair = Vector2.zero;
             mouseAim = false;
@@ -68,9 +69,9 @@ public class PlayerFighterController : PlayerController {
     public void Axis_Lock(float value) {
         if (value > 0.5f && !lockPressed) {
             float minDist = float.PositiveInfinity;
-            Fighter targ = null;
+            TargetableObject targ = null;
 
-            foreach (Fighter f in FindObjectsOfType<Fighter>()) {
+            foreach (var f in FindObjectsOfType<Fighter>()) {
                 if (f.transform != transform) {
                     Vector3 vpos = viewTarget.camera.WorldToScreenPoint(f.transform.position);
                     if (vpos.z > 0) {
@@ -94,8 +95,8 @@ public class PlayerFighterController : PlayerController {
     }
     #endregion
 
-    public override void Update() {
-        base.Update();
+    public override void GetInput() {
+        base.GetInput();
 
         Vector2 c = controlled.crosshair;
 
@@ -108,8 +109,8 @@ public class PlayerFighterController : PlayerController {
         }
     }
 
-    protected override void OnControllerEnabled() {
-        base.OnControllerEnabled();
+    protected override void OnEnable() {
+        base.OnEnable();
 
         controlled = channels as FighterChannels;
         crosshair = GetComponentInChildren<CrosshairMotor>();
@@ -119,8 +120,8 @@ public class PlayerFighterController : PlayerController {
         Cursor.lockState = CursorLockMode.Locked;
     }
 
-    protected override void OnControllerDisabled() {
-        base.OnControllerDisabled();
+    protected override void OnDisable() {
+        base.OnDisable();
 
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;

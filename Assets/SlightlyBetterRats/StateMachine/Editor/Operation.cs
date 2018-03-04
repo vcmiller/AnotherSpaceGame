@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace SBR {
+namespace SBR.Editor {
     public abstract class Operation {
         public bool _repaint;
 
@@ -21,12 +21,14 @@ namespace SBR {
             }
         }
         public StateMachineDefinition definition { get; private set; }
+        public StateMachineEditorWindow window { get; private set; }
         public StateMachineDefinition.State state { get; private set; }
         public bool showBaseGUI { get; protected set; }
 
-        public Operation(StateMachineDefinition definition, StateMachineDefinition.State state) {
+        public Operation(StateMachineDefinition definition, StateMachineEditorWindow window, StateMachineDefinition.State state) {
             this.definition = definition;
             this.state = state;
+            this.window = window;
         }
 
         public abstract void Update();

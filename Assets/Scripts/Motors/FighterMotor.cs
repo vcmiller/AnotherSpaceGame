@@ -13,15 +13,23 @@ public class FighterMotor : BasicMotor<FighterChannels> {
     public float angularThrust;
     public float maxRotSpeed;
 
+    private Vector3 vel, angVel;
+    
     protected override void Start() {
         base.Start();
 
         body = GetComponent<Rigidbody>();
+        Time.fixedDeltaTime = 1.0f / 60;
     }
 
     public override void TakeInput() {
-        body.velocity = Vector3.MoveTowards(body.velocity, channels.thrust * transform.forward * maxSpeed, thrust * Time.deltaTime * Mathf.Abs(channels.thrust));
+        vel = channels.thrust * transform.forward;
+        angVel = channels.rotation;
+    }
 
-        body.angularVelocity = Vector3.MoveTowards(body.angularVelocity, channels.rotation * maxRotSpeed, angularThrust * Time.deltaTime);
+    private void FixedUpdate() {
+        body.velocity = Vector3.MoveTowards(body.velocity, vel * maxSpeed, thrust * Time.deltaTime * Mathf.Abs(channels.thrust));
+
+        body.angularVelocity = Vector3.MoveTowards(body.angularVelocity, angVel * maxRotSpeed, angularThrust * Time.deltaTime);
     }
 }

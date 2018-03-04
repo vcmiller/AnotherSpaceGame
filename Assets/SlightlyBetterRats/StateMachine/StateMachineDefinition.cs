@@ -131,41 +131,48 @@ namespace SBR {
         }
 
         public Pair<State, Transition> SelectTransition(Vector2 position) {
-            foreach (State from in states) {
-                if (from.transitions != null) {
-                    foreach (Transition tr in from.transitions) {
-                        if (GetState(tr.to) == null) {
-                            continue;
-                        }
+            if (states != null) {
+                foreach (State from in states) {
+                    if (from.transitions != null) {
+                        foreach (Transition tr in from.transitions) {
+                            if (GetState(tr.to) == null) {
+                                continue;
+                            }
 
-                        var line = GetTransitionPoints(from, tr);
+                            var line = GetTransitionPoints(from, tr);
 
-                        Vector2 src = line.t1;
-                        Vector2 dest = line.t2;
+                            Vector2 src = line.t1;
+                            Vector2 dest = line.t2;
 
-                        Vector2 v = (dest - src).normalized;
+                            Vector2 v = (dest - src).normalized;
 
-                        float angle = Mathf.Atan2(v.y, v.x);
+                            float angle = Mathf.Atan2(v.y, v.x);
 
-                        Vector2 pr = position - src;
+                            Vector2 pr = position - src;
 
-                        Quaternion q = Quaternion.Euler(0, 0, -angle * Mathf.Rad2Deg);
+                            Quaternion q = Quaternion.Euler(0, 0, -angle * Mathf.Rad2Deg);
 
-                        pr = q * pr;
+                            pr = q * pr;
 
-                        Rect rect = new Rect(0, -tr.width * 1.5f, Vector2.Distance(src, dest), tr.width * 3);
+                            Rect rect = new Rect(0, -tr.width * 1.5f, Vector2.Distance(src, dest), tr.width * 3);
 
-                        if (rect.Contains(pr)) {
-                            return new Pair<State, Transition>(from, tr);
+                            if (rect.Contains(pr)) {
+                                return new Pair<State, Transition>(from, tr);
+                            }
                         }
                     }
                 }
             }
+            
 
             return new Pair<State, Transition>(null, null);
         }
 
         public State AddState() {
+            if (states == null) {
+                states = new List<State>();
+            }
+
             State newState = new State();
             states.Add(newState);
             return newState;

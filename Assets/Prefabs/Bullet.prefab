@@ -20,7 +20,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4291569541012140}
   - component: {fileID: 120810776378422864}
-  - component: {fileID: 114405005482625850}
+  - component: {fileID: 114208023249069260}
   - component: {fileID: 114682515547977030}
   m_Layer: 0
   m_Name: Bullet
@@ -42,7 +42,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &114405005482625850
+--- !u!114 &114208023249069260
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
@@ -50,14 +50,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 1705666690681878}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 99f08ddfb429839468cd3ff8e04d9bb3, type: 3}
+  m_Script: {fileID: 11500000, guid: 9b70dcc224b01e04da1193917aaefadf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  launchSpeed: 200
+  launchSpeed: 400
   damage: 1
   hitsTriggers: 0
   hitsIfNotFired: 0
   linger: 0
+  destroyOnHit: 1
+  impactPrefab: {fileID: 0}
+  hitMask:
+    serializedVersion: 2
+    m_Bits: 1025
 --- !u!114 &114682515547977030
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -79,6 +84,7 @@ LineRenderer:
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
   m_MotionVectors: 0
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
@@ -94,6 +100,7 @@ LineRenderer:
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
+  m_StitchLightmapSeams: 0
   m_SelectedEditorRenderState: 3
   m_MinimumChartSize: 4
   m_AutoUVMaxDistance: 0.5

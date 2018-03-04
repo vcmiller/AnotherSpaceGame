@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class AIFighterController : DecisionTree<FighterChannels> {
-    public Fighter target;
+    public TargetableObject target;
     public Projectile projectile;
     public float boxCastDistance = 10;
 

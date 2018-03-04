@@ -33,7 +33,7 @@ public abstract class DecisionTree<T> : Controller where T : Channels {
         };
     }
 
-    public override void Update() {
+    public override void GetInput() {
         if (root != null) {
             root();
         }

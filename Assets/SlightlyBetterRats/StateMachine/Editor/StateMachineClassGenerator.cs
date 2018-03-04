@@ -5,7 +5,7 @@ using UnityEditor;
 using System.IO;
 using System.Text.RegularExpressions;
 
-namespace SBR {
+namespace SBR.Editor {
     public static class StateMachineClassGenerator {
         private static string implClassTemplate = @"using UnityEngine;
 using SBR;
@@ -78,14 +78,15 @@ public abstract class {0} : {5} {{
         }}
     }}
 
-    public override void Initialize(GameObject obj) {{
-        base.Initialize(obj);
+    public override void Initialize() {{
+        base.Initialize();
 
         CallIfSet(currentState.enter);
     }}
 
-    public override void Update() {{
-        currentState.during();
+    public override void GetInput() {{
+        base.GetInput();
+        CallIfSet(currentState.during);
 
         State cur = currentState;
 
@@ -165,7 +166,7 @@ public abstract class {0} : {5} {{
             for (int i = 0; i < def.states.Count; i++) {
                 str += GetStateInitializer(def.states[i], i);
             }
-            if (def.defaultState.Length > 0) {
+            if (def.defaultState.Length > 0 && def.GetState(def.defaultState) != null) {
                 str += "        currentState = state" + def.defaultState + ";\n";
             } else {
                 str += "        currentState = states[0];\n";
@@ -190,7 +191,7 @@ public abstract class {0} : {5} {{
             if (state.hasExit) {
                 str += "        " + variable + ".exit = StateExit_" + state.name + ";\n";
             }
-            str += "        " + variable + ".transitions = new Transition[" + state.transitions.Count + "];\n";
+            str += "        " + variable + ".transitions = new Transition[" + (state.transitions == null ? 0 : state.transitions.Count) + "];\n";
             str += "        states[" + index + "] = " + variable + ";\n";
 
             str += "\n";
@@ -200,8 +201,10 @@ public abstract class {0} : {5} {{
         public static string GetTransitionInitializers(StateMachineDefinition def) {
             string str = "";
             foreach (var state in def.states) {
-                for (int i = 0; i < state.transitions.Count; i++) {
-                    str += GetTransitionInitializer(state, state.transitions[i], i);
+                if (state.transitions != null) {
+                    for (int i = 0; i < state.transitions.Count; i++) {
+                        str += GetTransitionInitializer(state, state.transitions[i], i);
+                    }
                 }
             }
             return str;
@@ -247,11 +250,13 @@ public abstract class {0} : {5} {{
             str += "\n";
 
             foreach (var state in def.states) {
-                foreach (var trans in state.transitions) {
-                    str += "    protected " + vo + " bool TransitionCond_" + state.name + "_" + trans.to + "() { return false; }\n";
+                if (state.transitions != null) {
+                    foreach (var trans in state.transitions) {
+                        str += "    protected " + vo + " bool TransitionCond_" + state.name + "_" + trans.to + "() { return false; }\n";
 
-                    if (trans.hasNotify) {
-                        str += "    protected " + vo + " void TransitionNotify_" + state.name + "_" + trans.to + "() { }\n";
+                        if (trans.hasNotify) {
+                            str += "    protected " + vo + " void TransitionNotify_" + state.name + "_" + trans.to + "() { }\n";
+                        }
                     }
                 }
             }

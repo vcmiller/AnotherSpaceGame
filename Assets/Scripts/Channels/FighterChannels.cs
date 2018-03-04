@@ -63,9 +63,9 @@ public class FighterChannels : SBR.Channels {
         }
     }
 
-    public Fighter target {
+    public TargetableObject target {
         get {
-            return GetInput<Fighter>("target");
+            return GetInput<TargetableObject>("target");
         }
 
         set {

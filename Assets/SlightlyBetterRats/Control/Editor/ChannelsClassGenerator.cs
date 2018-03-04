@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEditor;
 using System.IO;
 
-namespace SBR {
+namespace SBR.Editor {
     public static class ChannelsClassGenerator {
 
         private static string classTemplate = @"using UnityEngine;

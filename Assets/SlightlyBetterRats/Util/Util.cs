@@ -54,8 +54,8 @@ namespace SBR {
 
             float h = height / 2 - radius;
 
-            point1 = capsule.transform.position + capsuleUp * h;
-            point2 = capsule.transform.position - capsuleUp * h;
+            point1 = capsuleCenter + capsuleUp * h;
+            point2 = capsuleCenter - capsuleUp * h;
         }
     }
 }

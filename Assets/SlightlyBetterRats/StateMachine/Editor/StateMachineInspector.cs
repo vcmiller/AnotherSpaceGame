@@ -2,9 +2,9 @@
 using System.Collections;
 using UnityEditor;
 
-namespace SBR {
+namespace SBR.Editor {
     [CustomEditor(typeof(StateMachineDefinition))]
-    public class StateMachineInspector : Editor {
+    public class StateMachineInspector : UnityEditor.Editor {
         public override void OnInspectorGUI() {
             StateMachineDefinition myTarget = (StateMachineDefinition)target;
 

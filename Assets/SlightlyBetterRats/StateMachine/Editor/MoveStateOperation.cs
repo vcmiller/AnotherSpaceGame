@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-namespace SBR {
+namespace SBR.Editor {
     public class MoveStateOperation : Operation {
         public static int snap = 16;
 
         private Vector2 start;
         private Vector2 move;
 
-        public MoveStateOperation(StateMachineDefinition def, StateMachineDefinition.State state) : base(def, state) {
+        public MoveStateOperation(StateMachineDefinition def, StateMachineEditorWindow window, StateMachineDefinition.State state) : base(def, window, state) {
             showBaseGUI = true;
             start = state.position;
             move = Vector2.zero;
@@ -39,7 +39,7 @@ namespace SBR {
         public override void OnGUI() {
         }
 
-        private void Snap(ref Vector2 input) {
+        public static void Snap(ref Vector2 input) {
             input.x = Mathf.Round(input.x / snap) * snap;
             input.y = Mathf.Round(input.y / snap) * snap;
         }

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEditor;
 using System;
 
-namespace SBR {
+namespace SBR.Editor {
     [CustomPropertyDrawer(typeof(ChannelsDefinition.Channel))]
     public class ChannelEditor : PropertyDrawer {
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label) {

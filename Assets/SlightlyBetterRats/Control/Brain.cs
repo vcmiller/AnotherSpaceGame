@@ -9,9 +9,7 @@ namespace SBR {
         public string channelsType;
 
         public Channels channels { get; private set; }
-
-        [EditClassAndFields]
-        public List<Controller> controllerPrefabs;
+        
         private Controller[] controllers;
         private Motor[] motors;
 
@@ -26,13 +24,21 @@ namespace SBR {
             set {
                 if (value != _activeIndex && value < controllers.Length) {
                     if (_activeIndex >= 0) {
-                        activeController.enabled = false;
+                        try {
+                            activeController.enabled = false;
+                        } catch (Exception ex) {
+                            Debug.LogException(ex);
+                        }
                     }
 
                     _activeIndex = value;
 
                     if (value >= 0) {
-                        activeController.enabled = true;
+                        try {
+                            activeController.enabled = true;
+                        } catch (Exception ex) {
+                            Debug.LogException(ex);
+                        }
                     }
                 }
             }
@@ -55,10 +61,13 @@ namespace SBR {
 
             motors = GetComponentsInChildren<Motor>();
 
-            controllers = new Controller[controllerPrefabs.Count];
-            for (int i = 0; i < controllerPrefabs.Count; i++) {
-                controllers[i] = Instantiate(controllerPrefabs[i]);
-                controllers[i].Initialize(gameObject);
+            controllers = GetComponents<Controller>();
+            foreach (var ctrl in controllers) {
+                try {
+                    ctrl.Initialize();
+                } catch (Exception ex) {
+                    Debug.LogException(ex);
+                }
             }
 
             activeControllerIndex = defaultController;
@@ -68,77 +77,30 @@ namespace SBR {
             var c = activeController;
 
             if (c) {
-                c.Update();
+                try {
+                    c.GetInput();
+                } catch (Exception ex) {
+                    Debug.LogException(ex);
+                }
             }
 
             foreach (var motor in motors) {
-                if (motor.enableInput) {
-                    motor.TakeInput();
-                    motor.UpdateAfterInput();
+                if (motor.enabled) {
+                    try {
+                        motor.TakeInput();
+                    } catch (Exception ex) {
+                        Debug.LogException(ex);
+                    }
+
+                    try {
+                        motor.UpdateAfterInput();
+                    } catch (Exception ex) {
+                        Debug.LogException(ex);
+                    }
                 }
             }
 
             channels.ClearInput();
-        }
-
-        private void OnDestroy() {
-            foreach (var ctrl in controllers) {
-                Destroy(ctrl);
-            }
-        }
-
-        public void SendMessageToControllers(string functionName, object parameter = null) {
-            foreach (var ctrl in controllers) {
-                ctrl.SendMessage(functionName, parameter);
-            }
-        }
-
-        private void OnCollisionEnter(Collision collision) {
-            SendMessageToControllers("OnCollisionEnter", collision);
-        }
-
-        private void OnCollisionStay(Collision collision) {
-            SendMessageToControllers("OnCollisionStay", collision);
-        }
-
-        private void OnCollisionExit(Collision collision) {
-            SendMessageToControllers("OnCollisionExit", collision);
-        }
-
-        private void OnTriggerEnter(Collider other) {
-            SendMessageToControllers("OnTriggerEnter", other);
-        }
-
-        private void OnTriggerStay(Collider other) {
-            SendMessageToControllers("OnTriggerStay", other);
-        }
-
-        private void OnTriggerExit(Collider other) {
-            SendMessageToControllers("OnTriggerExit", other);
-        }
-
-        private void OnCollisionEnter2D(Collision2D collision) {
-            SendMessageToControllers("OnCollisionEnter2D", collision);
-        }
-
-        private void OnCollisionStay2D(Collision2D collision) {
-            SendMessageToControllers("OnCollisionStay2D", collision);
-        }
-
-        private void OnCollisionExit2D(Collision2D collision) {
-            SendMessageToControllers("OnCollisionExit2D", collision);
-        }
-
-        private void OnTriggerEnter2D(Collider2D collision) {
-            SendMessageToControllers("OnTriggerEnter2D", collision);
-        }
-
-        private void OnTriggerStay2D(Collider2D collision) {
-            SendMessageToControllers("OnTriggerStay2D", collision);
-        }
-
-        private void OnTriggerExit2D(Collider2D collision) {
-            SendMessageToControllers("OnTriggerExit2D", collision);
         }
     }
 }

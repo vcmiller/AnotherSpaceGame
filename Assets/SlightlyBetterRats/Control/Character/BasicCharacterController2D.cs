@@ -6,8 +6,8 @@ namespace SBR {
     public class BasicCharacterController2D : PlayerController {
         public CharacterChannels character { get; private set; }
 
-        public override void Initialize(GameObject obj) {
-            base.Initialize(obj);
+        public override void Initialize() {
+            base.Initialize();
 
             character = channels as CharacterChannels;
         }

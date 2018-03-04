@@ -14,9 +14,12 @@ namespace SBR {
         private Dictionary<string, AxisHandler> axes;
 
         public string inputSuffix;
+        public bool grabMouse = true;
 
         private delegate void ButtonHandler();
         private delegate void AxisHandler(float value);
+
+        public ViewTarget initialViewTarget;
 
         private ViewTarget curViewTarget;
         public ViewTarget viewTarget {
@@ -35,15 +38,19 @@ namespace SBR {
             }
         }
 
-        public override void Initialize(GameObject obj) {
-            base.Initialize(obj);
+        public override void Initialize() {
+            base.Initialize();
 
             axes = new Dictionary<string, AxisHandler>();
             buttonDown = new Dictionary<string, ButtonHandler>();
             buttonUp = new Dictionary<string, ButtonHandler>();
             buttonHeld = new Dictionary<string, ButtonHandler>();
 
-            viewTarget = GetComponentInChildren<ViewTarget>();
+            if (initialViewTarget) {
+                viewTarget = initialViewTarget;
+            } else {
+                viewTarget = GetComponentInChildren<ViewTarget>();
+            }
 
             foreach (MethodInfo m in GetType().GetMethods()) {
                 if (m.Name.StartsWith("Axis_")) {
@@ -97,8 +104,12 @@ namespace SBR {
 
         }
 
-        public override void Update() {
+        public override void GetInput() {
             if (enabled) {
+                if (grabMouse) {
+                    Cursor.lockState = CursorLockMode.Locked;
+                }
+
                 foreach (var m in axes) {
                     m.Value(Input.GetAxis(m.Key + inputSuffix));
                 }
@@ -123,13 +134,17 @@ namespace SBR {
             }
         }
 
-        protected override void OnControllerDisabled() {
+        protected virtual void OnDisable() {
             if (curViewTarget) {
                 curViewTarget.enabled = false;
             }
+
+            if (grabMouse) {
+                Cursor.lockState = CursorLockMode.None;
+            }
         }
 
-        protected override void OnControllerEnabled() {
+        protected virtual void OnEnable() {
             if (curViewTarget) {
                 curViewTarget.enabled = true;
             }

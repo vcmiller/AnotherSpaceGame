@@ -1,47 +1,74 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Net;
 using UnityEngine;
 
 /**
- * Motor class for a humanoid character. Enables movement and collision without the use of a Rigidbody.
- * However, if you want to get trigger/collision events for objects that don't have a Rigidbody, you
- * need to put a Rigidbody on this object and make it kinematic.
+ * Motor class for a humanoid character. Performs movement and collision using a Rigidbody.
+ * The Rigidbody should be set to NOT use gravity.
  */
 namespace SBR {
     [RequireComponent(typeof(CapsuleCollider))]
+    [RequireComponent(typeof(Rigidbody))]
     public class CharacterMotor : BasicMotor<CharacterChannels> {
         public CapsuleCollider capsule { get; private set; }
+        public Rigidbody rigidbody { get; private set; }
+        public Animator animator { get; private set; }
 
         public bool grounded { get; private set; }
+        public bool sliding { get; private set; }
         public bool jumpedThisFrame { get; private set; }
         public bool jumping { get; private set; }
         public bool enableAirControl { get; set; }
 
+        public Collider ground { get; private set; }
+
+        private Vector3 groundNormal;
+        private Vector3 groundLastPos;
+
+        private PhysicMaterial smoothAndSlippery;
+
+        private Vector3 rootMotionMovement;
+        private Quaternion rootMotionRotation = Quaternion.identity;
+        private Vector3 rootMotionBonePos;
+        private Quaternion rootMotionBoneRot = Quaternion.identity;
+        private Quaternion rootMotionRotMod = Quaternion.identity;
+        private float rootMotionBoneScale = 1.0f;
+
         [HideInInspector]
         public Vector3 velocity;
 
-        [HideInInspector]
-        private bool wasInAir = false;
-
         [Header("General")]
-        [Tooltip("Increase this if your character is passing through colliders. Should be about 0.05 * the character's height.")]
-        public float queryExtraDistance = 0.1f;
+        [Tooltip("Layers that block the character. Should be the same as the layers the collider interacts with.")]
+        public LayerMask groundLayers = 1;
 
-        [Tooltip("Layers that block the character.")]
-        public LayerMask blockingLayers;
+        [Tooltip("How the character rotates in relation to its movement.")]
+        public RotateMode rotateMode = RotateMode.None;
+
+        [Tooltip("Speed at which the character rotates. Only used if rotate mode is set to Movement.")]
+        public float rotationSpeed = 360;
 
         [Header("Movement: Walking")]
         [Tooltip("The max walk speed of the character.")]
         public float walkSpeed = 5;
 
         [Tooltip("The walking (ground) acceleration of the character.")]
-        public float walkAcceleration = 5;
+        public float walkAcceleration = 25;
 
         [Tooltip("The maximum slope, in degrees, that the character can climb.")]
         public float maxSlope = 45;
 
-        [Tooltip("The maximum height that the character can step up onto.")]
-        public float maxStep = 0.2f;
+        [Tooltip("Whether the player's movement should be aligned with the slope they are standing on.")]
+        public bool keepOnSlope = true;
+
+        [Tooltip("Whether the player will automatically stay on moving platforms.")]
+        public bool moveWithPlatforms = true;
+
+        public bool useRootMotionXZ = true;
+        public bool useRootMotionY = true;
+        public bool useRootMotionRotation = true;
+        public Transform rootMotionBone;
+        public float rootMotionScale = 1.0f;
 
         [Header("Jumping")]
         [Tooltip("The speed at which the character jumps.")]
@@ -50,21 +77,111 @@ namespace SBR {
         [Tooltip("The value to multiply Physics.Gravity by.")]
         public float gravityScale = 1;
 
+        [Tooltip("Distance to query when checking if player is on the ground.")]
+        public float groundDist = 0.1f;
+
         [Header("Movement: Falling")]
         [Tooltip("Air control multiplier (air acceleration is Air Control * Walk Acceleration.")]
         public float airControl = 0.5f;
+        
+        public enum RotateMode {
+            None, Movement, Control
+        }
 
         protected override void Start() {
             base.Start();
 
             capsule = GetComponent<CapsuleCollider>();
+            rigidbody = GetComponent<Rigidbody>();
+            animator = GetComponent<Animator>();
             enableAirControl = true;
+
+            rigidbody.useGravity = false;
+            rigidbody.isKinematic = false;
+
+            smoothAndSlippery = new PhysicMaterial();
+            smoothAndSlippery.bounciness = 0;
+            smoothAndSlippery.bounceCombine = PhysicMaterialCombine.Minimum;
+            smoothAndSlippery.staticFriction = 0;
+            smoothAndSlippery.dynamicFriction = 0;
+            smoothAndSlippery.frictionCombine = PhysicMaterialCombine.Minimum;
+            capsule.sharedMaterial = smoothAndSlippery;
+
+            if (rootMotionBone) {
+                rootMotionBonePos = rootMotionBone.localPosition;
+                rootMotionBoneRot = rootMotionBone.localRotation;
+
+                rootMotionRotMod = Quaternion.Inverse(Quaternion.Inverse(transform.rotation) * rootMotionBone.rotation);
+                rootMotionBoneScale = rootMotionBone.lossyScale.x / transform.localScale.x;
+            }
+
+            Time.fixedDeltaTime = 1.0f / 60.0f;
+        }
+
+        private void OnAnimatorMove() {
+            if (animator && rootMotionBone) {
+                rigidbody.isKinematic = true;
+
+                Vector3 initPos = rigidbody.position;
+                Quaternion initRot = rigidbody.rotation;
+
+                animator.ApplyBuiltinRootMotion();
+
+                rootMotionMovement = rigidbody.position - initPos;
+                rootMotionRotation = Quaternion.Inverse(initRot) * rigidbody.rotation;
+
+                rigidbody.position = initPos;
+                rigidbody.rotation = initRot;
+
+                rigidbody.isKinematic = false;
+            }
+        }
+
+        private void LateUpdate() {
+            if (rootMotionBone) {
+                Vector3 v = rootMotionBone.transform.localPosition;
+
+                if (useRootMotionXZ) {
+                    v.x = rootMotionBonePos.x;
+                    v.z = rootMotionBonePos.z;
+                }
+
+                if (useRootMotionY) {
+                    v.y = rootMotionBonePos.y;
+                }
+
+                rootMotionBone.transform.localPosition = v;
+
+                if (useRootMotionRotation) {
+                    rootMotionBone.localRotation = rootMotionBoneRot;
+                }
+            }
         }
 
         public override void TakeInput() {
-            Vector3 move = channels.movement;
-            move.y = 0;
-            move *= walkSpeed;
+            Vector3 move = Vector3.zero;
+
+            if (enableInput) {
+                move = Vector3.ProjectOnPlane(channels.movement, transform.up) * walkSpeed;
+
+                if (rotateMode == RotateMode.Movement) {
+                    Vector3 v = channels.movement;
+                    v.y = 0;
+                    if (v.sqrMagnitude > 0) {
+                        v = v.normalized;
+                        Vector3 axis = Vector3.Cross(transform.forward, v);
+                        if (Mathf.Approximately(axis.sqrMagnitude, 0)) {
+                            axis = Vector3.up;
+                        }
+
+                        float angle = Vector3.Angle(transform.forward, v);
+                        float amount = Mathf.Min(angle, Time.deltaTime * rotationSpeed);
+                        transform.Rotate(axis, amount, Space.World);
+                    }
+                } else if (rotateMode == RotateMode.Control) {
+                    transform.eulerAngles = new Vector3(0, channels.rotation.eulerAngles.y, 0);
+                }
+            }
 
             //if (body.isGrounded) {
             float accel = walkAcceleration;
@@ -76,117 +193,121 @@ namespace SBR {
                 }
             }
 
-            velocity = Vector3.MoveTowards(velocity, new Vector3(move.x, velocity.y, move.z), accel * Time.deltaTime);
+            if (sliding) {
+                Vector3 n = Vector3.ProjectOnPlane(groundNormal, transform.up);
+                n = -n.normalized;
+
+                if (Vector3.Dot(move, n) > 0) {
+                    Vector3 bad = Vector3.Project(move, n);
+                    move -= bad;
+                }
+            } else if (grounded && keepOnSlope) {
+                move = Vector3.ProjectOnPlane(move, groundNormal).normalized * move.magnitude;
+            }
+
+
+            Vector3 targetVel = move;
+            if (!grounded) {
+                targetVel += Vector3.Project(velocity, transform.up);
+            }
+            velocity = Vector3.MoveTowards(velocity, targetVel, accel * Time.deltaTime);
 
             jumpedThisFrame = false;
             if (grounded && channels.jump) {
                 jumpedThisFrame = true;
                 jumping = true;
-                velocity.y = jumpSpeed;
+                velocity = Vector3.ProjectOnPlane(velocity, transform.up) + transform.up * jumpSpeed;
             }
 
-            if (velocity.y <= 0) {
+            if (Vector3.Dot(velocity, transform.up) <= 0) {
                 jumping = false;
                 channels.jump = false;
             }
         }
 
-        public override void UpdateAfterInput() {
+        private void UpdateGrounded() {
+            Vector3 pnt1, pnt2;
+            float radius, height;
+            
+            capsule.GetPoints(out pnt1, out pnt2, out radius, out height);
 
-            int queryMask = blockingLayers;
-
-            velocity += Physics.gravity * gravityScale * Time.deltaTime;
+            var lastGround = ground;
 
             RaycastHit hit;
+            bool g = Physics.SphereCast(pnt2 + transform.up * groundDist, radius, -transform.up, out hit, groundDist * 2, groundLayers, QueryTriggerInteraction.Ignore) && !jumping;
 
-            Vector3 point1, point2;
-            float radius, height;
-            capsule.GetPoints(out point1, out point2, out radius, out height);
+            grounded = g && Vector3.Angle(hit.normal, transform.up) <= maxSlope;
+            sliding = g && !grounded;
 
-            Vector3 movement = velocity * Time.deltaTime;
-            movement = Vector3.ProjectOnPlane(movement, transform.up);
-            Vector3 moveDir = movement.normalized;
-            float d = movement.magnitude;
+            if (g) {
+                groundNormal = hit.normal;
+            }
 
-            if (d > 0 && Physics.CapsuleCast(point1 - moveDir * queryExtraDistance, point2 - moveDir * queryExtraDistance, radius, movement, out hit, d + queryExtraDistance, queryMask, QueryTriggerInteraction.Ignore)) {
-                Vector3 norm = hit.normal;
-                float slope = Vector3.Angle(hit.normal, transform.up);
+            if (grounded) {
+                ground = hit.collider;
 
-                bool slopeOK = true;
+                if (lastGround != ground) {
+                    groundLastPos = ground.transform.position;
+                }
+            } else {
+                ground = null;
+            }
+        }
+        
 
-                if (slope > maxSlope) {
-                    norm = Vector3.ProjectOnPlane(norm, transform.up).normalized;
-                    slopeOK = false;
+        public override void UpdateAfterInput() {
+            UpdateGrounded();
+            
+            if (!grounded) {
+                velocity += Physics.gravity * gravityScale * Time.deltaTime;
+            }
+            
+            rigidbody.velocity = Vector3.zero;
+        }
 
-                } // Else climb slope
+        private void FixedUpdate() {
+            Vector3 theGroundIsMoving = Vector3.zero;
 
-                // Try to go up step
-                RaycastHit stepHit;
-                float stepHeight = (maxStep + queryExtraDistance);
-                Vector3 stepTestOff = movement + transform.up * stepHeight;
+            if (ground) {
+                if (moveWithPlatforms) theGroundIsMoving = ground.transform.position - groundLastPos;
+                groundLastPos = ground.transform.position;
+            }
 
-                bool step = false;
+            Vector3 rootMovement = Vector3.zero;
 
-                if (!slopeOK) {
-                    if (Physics.BoxCast((point1 + point2) / 2 + stepTestOff, new Vector3(radius, height / 2, radius), -transform.up, out stepHit, capsule.transform.rotation, stepHeight, queryMask, QueryTriggerInteraction.Ignore)) {
-                        //if (Physics.CapsuleCast(point1 + stepTestOff, point2 + stepTestOff, radius, -transform.up, out stepHit, stepHeight)) {
-                        stepHeight -= stepHit.distance;
+            if (rootMotionBone) {
+                rootMovement = rootMotionMovement * rootMotionScale * rootMotionBoneScale;
 
-                        Vector3 stepHeightOff = transform.up * (stepHeight + queryExtraDistance) - moveDir * queryExtraDistance;
+                rootMovement = transform.InverseTransformVector(rootMovement);
+                rootMovement = rootMotionRotMod * rootMovement;
 
-                        if (stepHeight <= maxStep) {
-                            slope = Vector3.Angle(stepHit.normal, transform.up);
-
-                            if (slope < maxSlope && !Physics.CapsuleCast(point1 + stepHeightOff, point2 + stepHeightOff, radius, movement, d + queryExtraDistance, queryMask, QueryTriggerInteraction.Ignore)) {
-                                step = true;
-                                movement += transform.up * stepHeight;
-                            }
-                        }
-                    }
+                if (!useRootMotionY) {
+                    rootMovement.y = 0;
                 }
 
-                if (!step) {
-                    float dRem = (d + queryExtraDistance) - hit.distance;
-                    Vector3 badMovement = movement.normalized * dRem;
-                    Vector3 comp = Vector3.Project(-badMovement, norm);
+                if (!useRootMotionXZ) {
+                    rootMovement.x = 0;
+                    rootMovement.z = 0;
+                }
 
-                    movement += comp;
+                rootMovement = transform.TransformVector(rootMovement);
 
-                    comp.y = 0;
+                rootMotionMovement = Vector3.zero;
 
-                    velocity += comp / Time.deltaTime;
+                if (useRootMotionRotation) {
+                    rigidbody.MoveRotation(rootMotionRotMod * rootMotionRotation * Quaternion.Inverse(rootMotionRotMod) * rigidbody.rotation);
                 }
             }
 
-            transform.Translate(movement, Space.World);
+            rigidbody.MovePosition(rigidbody.position + velocity * Time.fixedDeltaTime + theGroundIsMoving + rootMovement);
+        }
 
-            Vector3 vert = velocity * Time.deltaTime;
-            vert = Vector3.Project(vert, transform.up);
-            d = vert.magnitude;
-            Vector3 dir = vert.normalized;
-            grounded = false;
+        private void OnCollisionStay(Collision other) {
+            var normal = other.contacts[0].normal;
 
-            if (d > 0 && Physics.CapsuleCast(point1 - dir * queryExtraDistance, point2 - dir * queryExtraDistance, radius, vert, out hit, d + queryExtraDistance, queryMask, QueryTriggerInteraction.Ignore)) {
-                Vector3 norm = hit.normal;
+            if (Vector3.Dot(velocity, normal) >= 0) return;
 
-                float slope = Vector3.Angle(hit.normal, transform.up);
-
-                if (slope < maxSlope) {
-                    norm = Vector3.Project(norm, transform.up).normalized;
-                    grounded = true;
-                }
-
-                float dRem = (d + queryExtraDistance) - hit.distance;
-                Vector3 badMovement = vert.normalized * dRem;
-                Vector3 comp = Vector3.Project(-badMovement, norm);
-
-                vert += comp;
-
-                velocity += comp / Time.deltaTime;
-            }
-
-            transform.Translate(vert, Space.World);
-
+            velocity += Vector3.Project(-velocity, normal);
         }
     }
 }
